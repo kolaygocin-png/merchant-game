@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Купец-молодец: Великий путь</title>
+    <style>
+        body {
+            background-color: #f4eae1;
+            background-image: radial-gradient(rgba(0,0,0,0.05) 15%, transparent 16%), radial-gradient(rgba(0,0,0,0.05) 15%, transparent 16%);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+            font-family: 'Arial', sans-serif;
+            color: #3e2723;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .game-window {
+            width: 390px; /* Размер под стандартный экран смартфона в VK Mini Apps */
+            height: 800px;
+            background: #fffdf9;
+            border: 8px solid #8d6e63;
+            border-image: repeating-linear-gradient(45deg, #a1887f, #a1887f 10px, #8d6e63 10px, #8d6e63 20px) 8;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Шапка в стиле нео-лубок */
+        .header {
+            background: #b71c1c;
+            color: #fff;
+            padding: 15px;
+            text-align: center;
+            border-bottom: 4px solid #f57f17;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px #5d0000;
+        }
+
+        .stats-bar {
+            background: #f57f17;
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #fff;
+        }
+
+        /* Базовый класс для игровых экранов */
+        .screen {
+            display: none; /* По умолчанию скрываем все экраны */
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        /* Класс активного экрана, который сейчас видно */
+        .screen.active-screen {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .ledger-title {
+            text-align: center;
+            font-size: 16px;
+            border-bottom: 2px dashed #8d6e63;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        /* Таблица товаров */
+        .market-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .market-table th {
+            background: #efebe9;
+            padding: 8px;
+            font-size: 12px;
+            text-align: left;
+            border-bottom: 2px solid #8d6e63;
+        }
+
+        .market-table td {
+            padding: 10px 8px;
+            font-size: 14px;
+            border-bottom: 1px solid #e0d4c3;
+        }
+
+        .trend-up { color: #2e7d32; font-weight: bold; }
+        .trend-down { color: #c62828; font-weight: bold; }
+
+        /* Кнопка действия */
+        .btn-trade {
+            background: #2e7d32;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            transition: 0.2s;
+        }
+        .btn-trade:active { transform: scale(0.95); }
+        .btn-trade:disabled { background: #ccc; cursor: not-allowed; }
+
+        /* ИНТЕГРАЦИЯ КАРТЫ a41b72b7-701b-45df-b5a2-cbb5ffe30dca.jpg */
+        .map-container {
+            width: 100%;
+            height: 550px; /* Увеличили высоту под вертикальный формат изображения */
+            background-image: url('a41b72b7-701b-45df-b5a2-cbb5ffe30dca.jpg');
+            background-size: cover;
+            background-position: center;
+            border: 4px double #8d6e63;
+            border-radius: 4px;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Интерактивные города на карте */
+        .city-node {
+            position: absolute;
+            background: #b71c1c;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            cursor: pointer;
+            border: 1px solid #f57f17;
+            transition: 0.1s;
+        }
+        .city-node:active {
+            transform: scale(0.95);
+            background: #f57f17;
+        }
+
+        /* Заглушки для других экранов */
+        .placeholder-text {
+            text-align: center;
+            margin-top: 50px;
+            color: #795548;
+            font-style: italic;
+        }
+
+        /* Нижнее меню */
+        .nav-bar {
+            background: #3e2723;
+            display: flex;
+            height: 60px;
+            border-top: 3px solid #f57f17;
+        }
+
+        .nav-item {
+            flex: 1;
+            color: #d7ccc8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            text-decoration: none;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            transition: 0.2s;
+        }
+
+        .nav-item.active {
+            color: #f57f17;
+            background: rgba(255,255,255,0.05);
+            font-weight: bold;
+        }
+
+        .nav-icon {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-window">
+        <!-- Шапка -->
+        <div class="header">
+            <h1>Купец-Молодец</h1>
+        </div>
+
+        <!-- Текущий статус игрока -->
+        <div class="stats-bar">
+            <span id="player-capital">🪙 Капитал: 450 руб.</span>
+            <span>🏆 Гильдия: II</span>
+        </div>
+
+        <!-- ЭКРАН 1: ЯРМАРКА -->
+        <div id="screen-market" class="screen active-screen">
+            <div class="ledger-title">📜 Нижегородская Ярмарка</div>
+            
+            <table class="market-table">
+                <thead>
+                    <tr>
+                        <th>Товар</th>
+                        <th>Цена</th>
+                        <th>Тренд</th>
+                        <th>Купить</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>🌾 Зерно</td>
+                        <td>12 руб.</td>
+                        <td class="trend-down">▼ -15%</td>
+                        <td><button class="btn-trade" onclick="buyItem('Зерно', 12)">Торг</button></td>
+                    </tr>
+                    <tr>
+                        <td>🧵 Лён</td>
+                        <td>28 руб.</td>
+                        <td class="trend-up">▲ +8%</td>
+                        <td><button class="btn-trade" onclick="buyItem('Лён', 28)">Торг</button></td>
+                    </tr>
+                    <tr>
+                        <td>🍯 Мёд</td>
+                        <td>45 руб.</td>
+                        <td class="trend-up">▲ +22%</td>
+                        <td><button class="btn-trade" onclick="buyItem('Мёд', 45)">Торг</button></td>
+                    </tr>
+                    <tr>
+                        <td>🪵 Пушнина</td>
+                        <td>110 руб.</td>
+                        <td class="trend-down">▼ -4%</td>
+                        <td><button class="btn-trade" onclick="buyItem('Пушнина', 110)">Торг</button></td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div style="background: #fff8e1; border-left: 4px solid #f57f17; padding: 10px; font-size: 12px; border-radius: 4px; margin-top: 15px;">
+                <strong>⚡ Событие: Весенняя распутица!</strong><br>
+                Дороги размыло, доставка товаров из Костромы усложнилась. Цены на лён растут!
+            </div>
+        </div>
+
+        <!-- ЭКРАН 2: КАРТА (Интерактивная) -->
+        <div id="screen-map" class="screen">
+            <div class="ledger-title">🗺️ Торговые Пути</div>
+            <div style="font-size: 13px; text-align: center;">Выберите город назначения для отправки обоза:</div>
+            
+            <div class="map-container">
+                <!-- Кнопки-метки, выставленные точно по координатам городов на изображении -->
+                <div class="city-node" style="top: 36%; left: 45%;" onclick="selectCity('Кострома')">📍 Кострома</div>
+                <div class="city-node" style="top: 42%; left: 29%;" onclick="selectCity('Ярославль')">📍 Ярославль</div>
+                <div class="city-node" style="top: 50%; left: 52%;" onclick="selectCity('Нижний Новгород')">📍 Н. Новгород</div>
+                <div class="city-node" style="top: 52%; left: 18%;" onclick="selectCity('Москва')">📍 Москва</div>
+                <div class="city-node" style="top: 52%; left: 81%;" onclick="selectCity('Казань')">📍 Казань</div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН 3: РАЗВИТИЕ -->
+        <div id="screen-build" class="screen">
+            <div class="ledger-title">🏗️ Развитие дела</div>
+            <p class="placeholder-text">Здесь вы сможете строить мануфактуры, открывать бесплатные школы и больницы для рабочих.</p>
+        </div>
+
+        <!-- ЭКРАН 4: РЕЙТИНГ -->
+        <div id="screen-rank" class="screen">
+            <div class="ledger-title">👥 Купеческий рейтинг</div>
+            <p class="placeholder-text">Таблица лидеров среди учеников вашего класса и всей школы.</p>
+        </div>
+
+        <!-- Нижняя навигация VK Mini Apps -->
+        <div class="nav-bar">
+            <button class="nav-item active" onclick="switchScreen('market', this)">
+                <span class="nav-icon">⚖️</span>
+                <span>Ярмарка</span>
+            </button>
+            <button class="nav-item" onclick="switchScreen('map', this)">
+                <span class="nav-icon">🗺️</span>
+                <span>Карта</span>
+            </button>
+            <button class="nav-item" onclick="switchScreen('build', this)">
+                <span class="nav-icon">🏗️</span>
+                <span>Развитие</span>
+            </button>
+            <button class="nav-item" onclick="switchScreen('rank', this)">
+                <span class="nav-icon">👥</span>
+                <span>Рейтинг</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ЛОГИКА ИГРЫ (JAVASCRIPT) -->
+    <script>
+        // Начальный капитал игрока
+        let capital = 450;
+
+        // 1. Функция переключения экранов
+        function switchScreen(screenId, targetButton) {
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active-screen');
+            });
+            document.getElementById('screen-' + screenId).classList.add('active-screen');
+            document.querySelectorAll('.nav-item').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            targetButton.classList.add('active');
+        }
+
+        // 2. Функция покупки товара
+        function buyItem(itemName, price) {
+            if (capital >= price) {
+                capital -= price;
+                document.getElementById('player-capital').innerText = `🪙 Капитал: ${capital} руб.`;
+                alert(`Вы успешно купили товар: ${itemName} за ${price} руб.!`);
+            } else {
+                alert("Не хватает купеческого капитала для сделки!");
+            }
+        }
+
+        // 3. Функция выбора города на карте
+        function selectCity(cityName) {
+            alert(`Обоз успешно отправлен в город: ${cityName}. Ждите прибытия и изменения цен на ярмарке!`);
+        }
+    </script>
+
+</body>
+</html>
